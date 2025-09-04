@@ -1,4 +1,4 @@
--- Football Fusion 2: Advanced ESP & Visual Enhancements
+loadstring([[-- Football Fusion 2: Advanced ESP & Visual Enhancements
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,7 +7,6 @@ local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 local settings = {
-    -- ESP Settings
     enablePlayerESP = true,
     playerOutlineColor = Color3.fromRGB(255, 0, 0),
     playerOutlineThickness = 2,
@@ -16,17 +15,14 @@ local settings = {
     ballOutlineThickness = 2,
     ballGlowColor = Color3.fromRGB(0, 255, 255),
     ballGlowTransparency = 0.5,
-    -- Ball Path Prediction
     enableBallPathPrediction = true,
     ballPathPredictionColor = Color3.fromRGB(255, 255, 0),
     ballPathPredictionThickness = 1,
-    -- Ball Box
     enableBallBox = true,
     ballBoxColor = Color3.fromRGB(255, 165, 0),
     ballBoxTransparency = 0.3,
 }
 
--- Function to create ESP for players
 local function createPlayerESP(player)
     local esp = Instance.new("Highlight")
     esp.Name = player.Name .. "_ESP"
@@ -39,7 +35,6 @@ local function createPlayerESP(player)
     esp.Enabled = settings.enablePlayerESP
 end
 
--- Function to create ESP for the football
 local function createBallESP()
     local ball = workspace:FindFirstChild("Football")
     if ball then
@@ -53,7 +48,6 @@ local function createBallESP()
         esp.FillTransparency = settings.ballOutlineThickness
         esp.Enabled = settings.enableBallESP
 
-        -- Ball Glow
         local glow = Instance.new("PointLight")
         glow.Parent = ball
         glow.Color = settings.ballGlowColor
@@ -63,16 +57,14 @@ local function createBallESP()
     end
 end
 
--- Function to predict the ball's path
 local function predictBallPath()
     local ball = workspace:FindFirstChild("Football")
     if ball then
-        local trajectory = {} -- Store trajectory points
+        local trajectory = {}
         local velocity = ball.Velocity
         local position = ball.Position
         local gravity = workspace.Gravity
 
-        -- Simulate ball's path
         for i = 1, 100 do
             local time = i / 60
             local x = position.X + velocity.X * time
@@ -81,7 +73,45 @@ local function predictBallPath()
             table.insert(trajectory, Vector3.new(x, y, z))
         end
 
-        -- Draw trajectory
         for i = 1, #trajectory - 1 do
             local part = Instance.new("Part")
-            part.Size = Vector
+            part.Size = Vector3.new(0.2, 0.2, 0.2)
+            part.Anchored = true
+            part.CanCollide = false
+            part.Position = trajectory[i]
+            part.Color = settings.ballPathPredictionColor
+            part.Material = Enum.Material.Neon
+            part.Parent = workspace
+            game:GetService("Debris"):AddItem(part, 0.1)
+        end
+    end
+end
+
+local function createBallBox()
+    local ball = workspace:FindFirstChild("Football")
+    if ball then
+        local box = Instance.new("BoxHandleAdornment")
+        box.Adornee = ball
+        box.Size = Vector3.new(4, 4, 4)
+        box.Color3 = settings.ballBoxColor
+        box.Transparency = settings.ballBoxTransparency
+        box.AlwaysOnTop = true
+        box.ZIndex = 10
+        box.Parent = ball
+        box.Visible = settings.enableBallBox
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            if not plr.Character:FindFirstChild(plr.Name .. "_ESP") then
+                createPlayerESP(plr)
+            end
+        end
+    end
+    if settings.enableBallESP then createBallESP() end
+    if settings.enableBallPathPrediction then predictBallPath() end
+    if settings.enableBallBox then createBallBox() end
+end)
+]])()
